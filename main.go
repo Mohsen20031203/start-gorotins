@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"sync"
+	"time"
 )
 
 var wg sync.WaitGroup
@@ -14,6 +15,7 @@ func write(ch chan<- int) {
 	defer wg.Done()
 
 	resp, err := http.Get("http://138.201.177.104:3040/ping") // <-- This URL appears to be blocked
+	time.Sleep(time.Second * 1)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return
