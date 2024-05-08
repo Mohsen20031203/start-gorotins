@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strconv"
 	"sync"
 	"time"
@@ -14,7 +15,7 @@ var wg sync.WaitGroup
 
 func write(ch chan<- int) {
 
-	for {
+	for i := 0; i < 5; i++ {
 		respons, err := http.Get("http://138.201.177.104:3040/ping")
 		if err != nil {
 			fmt.Println("err : Get Number")
@@ -40,9 +41,20 @@ func write(ch chan<- int) {
 }
 
 func reader(ch <-chan int) {
-	for s := range ch {
-		fmt.Println(s)
+
+	// part one & two
+	file, err := os.OpenFile("Number.txt", os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		fmt.Println("err : not write in file")
+		return
 	}
+	defer file.Close()
+
+	for num := range ch {
+		fmt.Fprintln(file, num)
+		fmt.Println(num)
+	}
+
 	defer wg.Done()
 }
 
