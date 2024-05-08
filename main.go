@@ -1,84 +1,32 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"io/ioutil"
 	"net/http"
-	"os"
-	"strconv"
 	"sync"
-	"time"
 )
 
 var wg sync.WaitGroup
 
 func write(ch chan<- int) {
-	defer wg.Done()
 
-	for {
-		resp, err := http.Get("http://138.201.177.104:3040/ping")
-		if err != nil {
-			fmt.Println("Error:", err)
-			return
-		}
-		defer resp.Body.Close()
-
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			fmt.Println("Error:", err)
-			return
-		}
-
-		numStr := string(body)
-		num, err := strconv.Atoi(numStr)
-		if err != nil {
-			fmt.Println("Error:", err)
-			return
-		}
-		ch <- num
-		time.Sleep(time.Second * 1)
-
-	}
-	close(ch)
-}
-
-func read(ch <-chan int) error {
-
-	// part two
-	file, err := os.Create("Number.txt")
+	respons, err := http.Get("http://138.201.177.104:3040/ping")
 	if err != nil {
-		return err
+		fmt.Println("err : Get Number")
+		return
 	}
-	defer file.Close()
+	defer respons.Body.Close()
+	fmt.Println(respons)
 
-	writer := bufio.NewWriter(file)
-
-	for {
-		num, ok := <-ch
-		if !ok {
-			break
-		}
-		_, err := fmt.Fprintln(writer, num)
-		if err != nil {
-			fmt.Println("Error:", err)
-		}
-	}
-
-	if err := writer.Flush(); err != nil {
-		return err
-	}
-
-	wg.Done()
-	return nil
+	defer wg.Done()
+	close(ch)
 }
 
 func main() {
 	ch := make(chan int)
 
-	wg.Add(2)
+	wg.Add(1)
 	go write(ch)
-	go read(ch)
 	wg.Wait()
 }
 
