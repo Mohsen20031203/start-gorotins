@@ -1,32 +1,57 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"net/http"
+	"strconv"
 	"sync"
+	"time"
 )
 
 var wg sync.WaitGroup
 
 func write(ch chan<- int) {
 
-	respons, err := http.Get("http://138.201.177.104:3040/ping")
-	if err != nil {
-		fmt.Println("err : Get Number")
-		return
-	}
-	defer respons.Body.Close()
-	fmt.Println(respons)
+	for {
+		respons, err := http.Get("http://138.201.177.104:3040/ping")
+		if err != nil {
+			fmt.Println("err : Get Number")
+			return
+		}
 
+		var buffer bytes.Buffer
+
+		_, err = io.Copy(&buffer, respons.Body)
+		if err != nil {
+			fmt.Println("خطا در خواندن و ارسال داده‌ها:", err)
+			return
+		}
+
+		number := buffer.String()
+		nint, err := strconv.Atoi(number)
+		ch <- nint
+		time.Sleep(time.Second * 1)
+		defer respons.Body.Close()
+	}
 	defer wg.Done()
 	close(ch)
+}
+
+func reader(ch <-chan int) {
+	for s := range ch {
+		fmt.Println(s)
+	}
+	defer wg.Done()
 }
 
 func main() {
 	ch := make(chan int)
 
-	wg.Add(1)
+	wg.Add(2)
 	go write(ch)
+	go reader(ch)
 	wg.Wait()
 }
 
