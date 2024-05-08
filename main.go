@@ -37,7 +37,7 @@ func write(ch chan<- int) {
 		defer respons.Body.Close()
 	}
 	defer wg.Done()
-	close(ch)
+	defer close(ch)
 }
 
 func reader(ch <-chan int) {
@@ -48,13 +48,13 @@ func reader(ch <-chan int) {
 		fmt.Println("err : not write in file")
 		return
 	}
-	defer file.Close()
 
 	for num := range ch {
 		fmt.Fprintln(file, num)
 		fmt.Println(num)
 	}
 
+	defer file.Close()
 	defer wg.Done()
 }
 
