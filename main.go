@@ -15,7 +15,7 @@ var wg sync.WaitGroup
 
 func write(ch chan<- int) {
 
-	for i := 0; i < 5; i++ {
+	for {
 		respons, err := http.Get("http://138.201.177.104:3040/ping")
 		if err != nil {
 			fmt.Println("err : Get Number")
