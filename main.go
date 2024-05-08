@@ -3,40 +3,42 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"os"
-	"sync"
-	/*"io/ioutil"
+	"io/ioutil"
 	"net/http"
-	"strconv"*/)
+	"os"
+	"strconv"
+	"sync"
+	"time"
+)
 
 var wg sync.WaitGroup
 
 func write(ch chan<- int) {
 	defer wg.Done()
 
-	/*resp, err := http.Get("http://138.201.177.104:3040/ping") // <-- This URL appears to be blocked
-	time.Sleep(time.Second * 1)
-	if err != nil {
-		fmt.Println("Error:", err)
-		return
-	}
-	defer resp.Body.Close()
+	for {
+		resp, err := http.Get("http://138.201.177.104:3040/ping")
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+		defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println("Error:", err)
-		return
-	}
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
 
-	numStr := string(body)
-	num, err := strconv.Atoi(numStr)
-	if err != nil {
-		fmt.Println("Error:", err)
-		return
-	}*/
+		numStr := string(body)
+		num, err := strconv.Atoi(numStr)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+		ch <- num
+		time.Sleep(time.Second * 1)
 
-	for i := 0; i < 10; i++ {
-		ch <- i
 	}
 	close(ch)
 }
