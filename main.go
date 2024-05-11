@@ -76,7 +76,7 @@ func reader(ch <-chan []byte, db *leveldb.DB) {
 
 		data, err := db.Get(key, nil)
 		if err != nil {
-			log.Fatal("dont get value databace")
+			log.Fatal("dont get value in databace")
 		}
 		log.Printf("Value: %s\n", data)
 	}
