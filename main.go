@@ -19,7 +19,7 @@ var wg sync.WaitGroup
 
 func write(ch chan<- []byte) {
 
-	for i := 0; i < 10; i++ {
+	for {
 		respons, err := http.Get("http://138.201.177.104:3040/ping")
 		if err != nil {
 			fmt.Println("err : Get Number")
@@ -62,7 +62,7 @@ func reader(ch <-chan []byte, db *leveldb.DB) {
 		fmt.Println(nint)
 
 		// part two
-		fmt.Fprintln(file, num)
+		fmt.Fprintln(file, nint)
 
 		// part three
 		value := num
@@ -74,7 +74,7 @@ func reader(ch <-chan []byte, db *leveldb.DB) {
 			return
 		}
 
-		data, err := db.Get([]byte(key), nil)
+		data, err := db.Get(key, nil)
 		if err != nil {
 			log.Fatal("dont get value databace")
 		}
