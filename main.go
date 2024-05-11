@@ -9,11 +9,15 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
+	"log"
+
+	"github.com/syndtr/goleveldb/leveldb"
 )
 
 var wg sync.WaitGroup
 
-func write(ch chan<- int) {
+func write(ch chan<- int, db *leveldb.DB) {
 
 	for {
 		respons, err := http.Get("http://138.201.177.104:3040/ping")
@@ -26,18 +30,36 @@ func write(ch chan<- int) {
 
 		_, err = io.Copy(&buffer, respons.Body)
 		if err != nil {
-			fmt.Println("خطا در خواندن و ارسال داده‌ها:", err)
+			fmt.Println("not send & read body respons", err)
 			return
 		}
 
+		key := []byte(strconv.FormatInt(time.Now().Unix(), 10))
+		value := buffer.Bytes()
+
+		err = db.Put(key, value, nil)
+		if err != nil {
+			fmt.Println("not send key & value in the databace")
+			return
+		}
+
+		data, err := db.Get([]byte(key), nil)
+		if err != nil {
+			log.Fatal("noooooot")
+		}
+		log.Printf("Value: %s\n", data)
+
 		number := buffer.String()
 		nint, err := strconv.Atoi(number)
+		if err != nil {
+			fmt.Println("not chang 'byte' --> 'int' ")
+		}
 		ch <- nint
 		time.Sleep(time.Second * 1)
 		defer respons.Body.Close()
 	}
-	defer wg.Done()
 	defer close(ch)
+	defer wg.Done()
 }
 
 func reader(ch <-chan int) {
@@ -61,8 +83,15 @@ func reader(ch <-chan int) {
 func main() {
 	ch := make(chan int)
 
+	db, err := leveldb.OpenFile("start-gorotins", nil)
+	if err != nil {
+		fmt.Println("err in open library", err)
+		return
+	}
+	defer db.Close()
+
 	wg.Add(2)
-	go write(ch)
+	go write(ch, db)
 	go reader(ch)
 	wg.Wait()
 }
