@@ -17,9 +17,9 @@ import (
 
 var wg sync.WaitGroup
 
-func write(ch chan<- int, db *leveldb.DB) {
+func write(ch chan<- []byte) {
 
-	for {
+	for i := 0; i < 10; i++ {
 		respons, err := http.Get("http://138.201.177.104:3040/ping")
 		if err != nil {
 			fmt.Println("err : Get Number")
@@ -34,8 +34,39 @@ func write(ch chan<- int, db *leveldb.DB) {
 			return
 		}
 
+		ch <- buffer.Bytes()
+		time.Sleep(time.Second * 1)
+		defer respons.Body.Close()
+	}
+	defer close(ch)
+	defer wg.Done()
+}
+
+func reader(ch <-chan []byte, db *leveldb.DB) {
+
+	// part two
+	file, err := os.OpenFile("Number.txt", os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		fmt.Println("err : not write in file")
+		return
+	}
+
+	for num := range ch {
+		// part one
+		number := string(num)
+		nint, err := strconv.Atoi(number)
+		if err != nil {
+			fmt.Println("not convert bytes to int")
+			return
+		}
+		fmt.Println(nint)
+
+		// part two
+		fmt.Fprintln(file, num)
+
+		// part three
+		value := num
 		key := []byte(strconv.FormatInt(time.Now().Unix(), 10))
-		value := buffer.Bytes()
 
 		err = db.Put(key, value, nil)
 		if err != nil {
@@ -45,35 +76,9 @@ func write(ch chan<- int, db *leveldb.DB) {
 
 		data, err := db.Get([]byte(key), nil)
 		if err != nil {
-			log.Fatal("noooooot")
+			log.Fatal("dont get value databace")
 		}
 		log.Printf("Value: %s\n", data)
-
-		number := buffer.String()
-		nint, err := strconv.Atoi(number)
-		if err != nil {
-			fmt.Println("not chang 'byte' --> 'int' ")
-		}
-		ch <- nint
-		time.Sleep(time.Second * 1)
-		defer respons.Body.Close()
-	}
-	defer close(ch)
-	defer wg.Done()
-}
-
-func reader(ch <-chan int) {
-
-	// part one & two
-	file, err := os.OpenFile("Number.txt", os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		fmt.Println("err : not write in file")
-		return
-	}
-
-	for num := range ch {
-		fmt.Fprintln(file, num)
-		fmt.Println(num)
 	}
 
 	defer file.Close()
@@ -81,7 +86,7 @@ func reader(ch <-chan int) {
 }
 
 func main() {
-	ch := make(chan int)
+	ch := make(chan []byte)
 
 	db, err := leveldb.OpenFile("start-gorotins", nil)
 	if err != nil {
@@ -91,8 +96,8 @@ func main() {
 	defer db.Close()
 
 	wg.Add(2)
-	go write(ch, db)
-	go reader(ch)
+	go write(ch)
+	go reader(ch, db)
 	wg.Wait()
 }
 
