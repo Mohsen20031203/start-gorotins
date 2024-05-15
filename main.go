@@ -38,8 +38,6 @@ func write(ch chan<- []byte) {
 		time.Sleep(time.Second * 1)
 		defer respons.Body.Close()
 	}
-	defer close(ch)
-	defer wg.Done()
 }
 
 func reader(ch <-chan []byte, db *leveldb.DB) {
@@ -51,40 +49,42 @@ func reader(ch <-chan []byte, db *leveldb.DB) {
 		return
 	}
 
-	for num := range ch {
-		// part one
-		number := string(num)
-		nint, err := strconv.Atoi(number)
-		if err != nil {
-			fmt.Println("not convert bytes to int")
-			return
+	for {
+		select {
+		case num, ok := <-ch:
+			if !ok {
+				fmt.Println("Channel closed")
+				return
+			}
+
+			number := string(num)
+			nint, err := strconv.Atoi(number)
+			if err != nil {
+				fmt.Println("not convert bytes to int")
+				return
+			}
+			fmt.Println(nint)
+
+			fmt.Fprintln(file, nint)
+
+			key := []byte(strconv.FormatInt(time.Now().Unix(), 10))
+			err = db.Put(key, num, nil)
+			if err != nil {
+				fmt.Println("not send key & value in the database")
+				return
+			}
+
+			data, err := db.Get(key, nil)
+			if err != nil {
+				log.Fatal("dont get value in database")
+			}
+			log.Printf("Value: %s key: %s \n", data, key)
+		default:
+			time.Sleep(time.Second) // اگر هیچ چیزی بر روی کانال نیاید، صبر کنید
 		}
-		fmt.Println(nint)
 
-		// part two
-		fmt.Fprintln(file, nint)
-
-		// part three
-		value := num
-		key := []byte(strconv.FormatInt(time.Now().Unix(), 10))
-
-		err = db.Put(key, value, nil)
-		if err != nil {
-			fmt.Println("not send key & value in the databace")
-			return
-		}
-
-		data, err := db.Get(key, nil)
-		if err != nil {
-			log.Fatal("dont get value in databace")
-		}
-		log.Printf("Value: %s\n", data)
 	}
-
-	defer file.Close()
-	defer wg.Done()
 }
-
 func main() {
 	ch := make(chan []byte)
 
