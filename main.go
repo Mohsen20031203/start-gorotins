@@ -80,7 +80,7 @@ func reader(ch <-chan []byte, db *leveldb.DB) {
 			}
 			log.Printf("Value: %s key: %s \n", data, key)
 		default:
-			time.Sleep(time.Second) // اگر هیچ چیزی بر روی کانال نیاید، صبر کنید
+			time.Sleep(time.Second)
 		}
 
 	}
