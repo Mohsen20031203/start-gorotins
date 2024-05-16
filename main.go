@@ -22,7 +22,8 @@ func write(ch chan<- []byte) {
 	for {
 		respons, err := http.Get("http://138.201.177.104:3040/ping")
 		if err != nil {
-			fmt.Println("err : Get Number")
+			log.Fatal("err : Get Number", err)
+			close(ch)
 			return
 		}
 
@@ -53,7 +54,7 @@ func reader(ch <-chan []byte, db *leveldb.DB) {
 		select {
 		case num, ok := <-ch:
 			if !ok {
-				fmt.Println("Channel closed")
+				log.Fatal("Channel closed")
 				return
 			}
 
@@ -86,6 +87,7 @@ func reader(ch <-chan []byte, db *leveldb.DB) {
 	}
 }
 func main() {
+
 	ch := make(chan []byte)
 
 	db, err := leveldb.OpenFile("start-gorotins", nil)
