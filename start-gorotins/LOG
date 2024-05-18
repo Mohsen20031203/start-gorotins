@@ -966,3 +966,33 @@
 10:29:00.911923 version@stat F·[3 30] S·11KiB[1KiB 9KiB] Sc·[0.75 0.00]
 10:29:01.717268 db@close closing
 10:29:01.717500 db@close done T·216.333µs
+=============== May 18, 2024 (+0330) ===============
+16:54:53.608823 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+16:54:53.610782 version@stat F·[3 30] S·11KiB[1KiB 9KiB] Sc·[0.75 0.00]
+16:54:53.610819 db@open opening
+16:54:53.610994 journal@recovery F·1
+16:54:53.611758 journal@recovery recovering @219
+16:54:53.612403 version@stat F·[3 30] S·11KiB[1KiB 9KiB] Sc·[0.75 0.00]
+16:54:53.628580 db@janitor F·35 G·0
+16:54:53.628637 db@open done T·17.803209ms
+=============== May 18, 2024 (+0330) ===============
+16:55:19.890242 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+16:55:19.891766 version@stat F·[3 30] S·11KiB[1KiB 9KiB] Sc·[0.75 0.00]
+16:55:19.891806 db@open opening
+16:55:19.892015 journal@recovery F·1
+16:55:19.892753 journal@recovery recovering @221
+16:55:19.898521 memdb@flush created L0@223 N·6 S·181B "171..694,v976":"171..702,v981"
+16:55:19.898789 version@stat F·[4 30] S·11KiB[1KiB 9KiB] Sc·[1.00 0.00]
+16:55:19.914057 db@janitor F·36 G·0
+16:55:19.914124 db@open done T·22.301041ms
+16:55:19.914736 table@move L0@223 -> L1
+16:55:19.915297 version@stat F·[3 31] S·11KiB[1KiB 9KiB] Sc·[0.75 0.00]
+=============== May 18, 2024 (+0330) ===============
+16:55:34.145212 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+16:55:34.145614 version@stat F·[3 31] S·11KiB[1KiB 9KiB] Sc·[0.75 0.00]
+16:55:34.145627 db@open opening
+16:55:34.145684 journal@recovery F·1
+16:55:34.145928 journal@recovery recovering @224
+16:55:34.146136 version@stat F·[3 31] S·11KiB[1KiB 9KiB] Sc·[0.75 0.00]
+16:55:34.161769 db@janitor F·36 G·0
+16:55:34.161827 db@open done T·16.192292ms

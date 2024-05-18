@@ -17,7 +17,9 @@ import (
 
 var wg sync.WaitGroup
 
-func write(ch chan<- []byte, cancel context.CancelFunc) {
+func write(ch chan<- []byte, ctx context.Context) {
+	ctx, cancle := context.WithCancel(ctx)
+
 	defer close(ch)
 	defer wg.Done()
 	for {
@@ -26,7 +28,7 @@ func write(ch chan<- []byte, cancel context.CancelFunc) {
 			respons, err := http.Get("http://138.201.177.104:3040/ping")
 			if err != nil {
 				log.Printf("write: Error occurred:")
-				cancel()
+				cancle()
 				return
 			}
 
@@ -101,7 +103,7 @@ func main() {
 	defer db.Close()
 
 	wg.Add(2)
-	go write(ch, cancel)
+	go write(ch, ctx)
 	go reader(ch, db, ctx)
 
 	wg.Wait()
