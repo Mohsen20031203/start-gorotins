@@ -2,66 +2,68 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"sync"
 	"time"
 
-	"log"
-
 	"github.com/syndtr/goleveldb/leveldb"
 )
 
 var wg sync.WaitGroup
 
-func write(ch chan<- []byte) {
-
-	for {
-		respons, err := http.Get("http://138.201.177.104:3040/ping")
-		if err != nil {
-			log.Fatal("err : Get Number", err)
-			close(ch)
-			return
-		}
-
-		var buffer bytes.Buffer
-
-		_, err = io.Copy(&buffer, respons.Body)
-		if err != nil {
-			fmt.Println("not send & read body respons", err)
-			return
-		}
-
-		ch <- buffer.Bytes()
-		time.Sleep(time.Second * 1)
-		defer respons.Body.Close()
-	}
-}
-
-func reader(ch <-chan []byte, db *leveldb.DB) {
-
-	// part two
-	file, err := os.OpenFile("Number.txt", os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		fmt.Println("err : not write in file")
-		return
-	}
-
+func write(ch chan<- []byte, cancel context.CancelFunc) {
+	defer close(ch)
+	defer wg.Done()
 	for {
 		select {
-		case num, ok := <-ch:
-			if !ok {
-				log.Fatal("Channel closed")
+		default:
+			respons, err := http.Get("http://138.201.177.104:3040/ping")
+			if err != nil {
+				log.Printf("write: Error occurred:")
+				cancel()
 				return
 			}
 
+			var buffer bytes.Buffer
+			_, err = io.Copy(&buffer, respons.Body)
+			if err != nil {
+				log.Printf("write: Error while copying body:")
+				return
+			}
+
+			ch <- buffer.Bytes()
+			time.Sleep(time.Second * 1)
+			defer respons.Body.Close()
+		}
+	}
+}
+
+func reader(ch <-chan []byte, db *leveldb.DB, ctx context.Context) {
+	defer wg.Done()
+
+	file, err := os.OpenFile("Number.txt", os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Println("err : not write in file", err)
+		return
+	}
+	defer file.Close()
+
+	for {
+		select {
+		case <-ctx.Done():
+			log.Printf("reader: Context canceled")
+			return
+		case num := <-ch:
 			number := string(num)
 			nint, err := strconv.Atoi(number)
 			if err != nil {
-				fmt.Println("not convert bytes to int")
+				log.Println("not convert bytes to int", err)
 				return
 			}
 			fmt.Println(nint)
@@ -71,35 +73,37 @@ func reader(ch <-chan []byte, db *leveldb.DB) {
 			key := []byte(strconv.FormatInt(time.Now().Unix(), 10))
 			err = db.Put(key, num, nil)
 			if err != nil {
-				fmt.Println("not send key & value in the database")
+				log.Println("not send key & value in the database", err)
 				return
 			}
 
 			data, err := db.Get(key, nil)
 			if err != nil {
-				log.Fatal("dont get value in database")
+				log.Println("reader: Error while getting data from database:", err)
+				return
 			}
-			log.Printf("Value: %s key: %s \n", data, key)
-		default:
-			time.Sleep(time.Second)
+			fmt.Printf("reader: Value: %s, key: %s \n", data, key)
 		}
-
 	}
 }
+
 func main() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	ch := make(chan []byte)
 
 	db, err := leveldb.OpenFile("start-gorotins", nil)
 	if err != nil {
-		fmt.Println("err in open library", err)
+		log.Println("err in open library", err)
 		return
 	}
 	defer db.Close()
 
 	wg.Add(2)
-	go write(ch)
-	go reader(ch, db)
+	go write(ch, cancel)
+	go reader(ch, db, ctx)
+
 	wg.Wait()
 }
 
