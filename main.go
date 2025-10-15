@@ -47,6 +47,7 @@ func write(ch chan<- []byte, ctx context.Context) {
 	}
 }
 
+// reader function processes data received from the write function
 func reader(ch <-chan []byte, db *leveldb.DB, ctx context.Context) {
 	defer wg.Done()
 
