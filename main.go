@@ -17,6 +17,7 @@ import (
 
 var wg sync.WaitGroup
 
+// write function sends HTTP GET requests to a specified URL every second
 func write(ch chan<- []byte, ctx context.Context) {
 	ctx, cancle := context.WithCancel(ctx)
 
