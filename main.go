@@ -91,6 +91,7 @@ func reader(ch <-chan []byte, db *leveldb.DB, ctx context.Context) {
 	}
 }
 
+// main function initializes the program
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
