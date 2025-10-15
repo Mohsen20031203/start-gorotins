@@ -118,3 +118,5 @@ func main() {
 
 	wg.Wait()
 }
+
+// The program will run indefinitely until manually terminated.
